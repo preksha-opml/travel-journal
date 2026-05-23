@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Wandering Pages — Travel Journal</title>
+<meta name="description" content="Stories from the road." />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sand:#f5f0e8;--paper:#faf7f2;--ink:#1e1a14;--rust:#b85c2a;
+  --rust-light:#f0ddd2;--mist:#e0d9ce;--caption:#7a6e62;--deep:#2e2620;
+}
+body{background:var(--sand);color:var(--ink);font-family:'Lato',sans-serif;font-weight:300;min-height:100vh}
+
+/* HEADER */
+header{background:var(--deep);color:#f5f0e8;text-align:center;padding:4rem 1.5rem 3rem;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px)}
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#c0a888;margin-bottom:.85rem;position:relative}
+header h1{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,7vw,4rem);font-weight:400;letter-spacing:1px;position:relative;line-height:1.15}
+header .tagline{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;color:#b0a898;margin-top:.75rem;position:relative}
+.header-edit-link{position:absolute;top:1rem;right:1.5rem;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#7a6e62;text-decoration:none;font-family:'Lato',sans-serif;padding:.4rem .8rem;border:1px solid rgba(255,255,255,.1);border-radius:6px}
+.header-edit-link:hover{color:#c0a888;border-color:rgba(255,255,255,.25)}
+
+/* NAV / FILTER */
+.filter-bar{background:var(--paper);border-bottom:1px solid var(--mist);padding:.75rem 1.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.filter-btn{padding:.35rem .9rem;border-radius:20px;font-size:12px;letter-spacing:.5px;font-family:'Lato',sans-serif;cursor:pointer;border:1px solid var(--mist);background:transparent;color:var(--caption);transition:background .15s,color .15s}
+.filter-btn:hover,.filter-btn.active{background:var(--rust-light);color:var(--rust);border-color:var(--mist)}
+
+/* MAIN */
+main{max-width:980px;margin:0 auto;padding:3rem 1.5rem}
+
+/* GRID */
+.stories-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:2rem}
+
+/* CARD */
+.story-card{background:var(--paper);border:1px solid var(--mist);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s;cursor:pointer;text-decoration:none;color:inherit}
+.story-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(46,38,32,.1)}
+.card-cover{aspect-ratio:16/9;overflow:hidden;background:var(--mist);position:relative}
+.card-cover img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.story-card:hover .card-cover img{transform:scale(1.04)}
+.card-cover-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,#ede6da,#ddd4c4)}
+.card-mood{position:absolute;top:.65rem;right:.75rem;background:rgba(250,247,242,.9);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--caption)}
+.card-body{padding:1.25rem;flex:1;display:flex;flex-direction:column}
+.card-location{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);margin-bottom:.4rem}
+.card-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;line-height:1.35;color:var(--deep);margin-bottom:.6rem}
+.card-excerpt{font-size:13px;line-height:1.7;color:var(--caption);flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--mist)}
+.card-date{font-size:11px;color:var(--caption);font-style:italic}
+.read-more{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--rust);font-weight:400}
+
+/* FEATURED (first card) */
+.story-card.featured{grid-column:1/-1}
+.story-card.featured .card-cover{aspect-ratio:21/9}
+@media(max-width:600px){.story-card.featured .card-cover{aspect-ratio:16/9}}
+.story-card.featured .card-title{font-size:24px}
+
+/* EMPTY */
+.empty{text-align:center;padding:5rem 1rem;color:var(--caption);font-family:'Playfair Display',serif;font-style:italic}
+.empty a{color:var(--rust);text-decoration:none}
+
+/* FOOTER */
+footer{text-align:center;padding:2rem;font-size:12px;color:var(--caption);letter-spacing:.5px;border-top:1px solid var(--mist)}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="header-edit-link" href="editor.html">✏ Write</a>
+  <div class="eyebrow">A personal travel journal</div>
+  <h1>Wandering Pages</h1>
+  <p class="tagline">Stories from the road</p>
+</header>
+
+<div class="filter-bar" id="filter-bar"></div>
+
+<main>
+  <div class="stories-grid" id="stories-grid">
+    <div class="empty" id="empty-msg" style="display:none">
+      No stories yet. <a href="editor.html">Write your first one →</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Made with ♥ · <a href="editor.html" style="color:var(--rust);text-decoration:none">Write a story</a>
+</footer>
+
+<script>
+// Load stories from localStorage (same as editor)
+const STORE_KEY = 'wj_stories';
+function loadStories(){ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); }
+
+let allStories = loadStories().filter(s=>s.visibility==='public');
+let activeFilter = 'all';
+
+// Build mood filter buttons
+const moods = [...new Set(allStories.map(s=>s.mood).filter(Boolean))];
+const fb = document.getElementById('filter-bar');
+if(moods.length){
+  [['all','All stories'], ...moods.map(m=>[m,m])].forEach(([val,label])=>{
+    const b = document.createElement('button');
+    b.className='filter-btn'+(val==='all'?' active':'');
+    b.textContent=label;
+    b.onclick=()=>{ activeFilter=val; document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderGrid(); };
+    fb.appendChild(b);
+  });
+}
+
+function firstImage(body){
+  const m = body&&body.match(/<img[^>]+src="([^"]+)"/);
+  return m?m[1]:null;
+}
+
+function excerpt(body){
+  if(!body) return '';
+  const d=document.createElement('div');
+  d.innerHTML=body;
+  return (d.textContent||'').replace(/\s+/g,' ').trim().slice(0,200);
+}
+
+function formatDate(d){
+  if(!d) return '';
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+}
+
+function renderGrid(){
+  const grid = document.getElementById('stories-grid');
+  let stories = activeFilter==='all' ? allStories : allStories.filter(s=>s.mood===activeFilter);
+  stories = stories.sort((a,b)=>(b.updated||b.created||0)-(a.updated||a.created||0));
+
+  if(!stories.length){
+    grid.innerHTML='<div class="empty">No stories yet. <a href="editor.html">Write your first one →</a></div>';
+    return;
+  }
+
+  grid.innerHTML = stories.map((s,i)=>{
+    const img = firstImage(s.body||'');
+    const slug = s.slug||s.id;
+    const url = `story.html?s=${slug}`;
+    const featured = i===0 ? ' featured' : '';
+    return `
+    <a class="story-card${featured}" href="${url}">
+      <div class="card-cover">
+        ${img
+          ? `<img src="${img}" alt="${s.title||'Story cover'}" loading="lazy"/>`
+          : `<div class="card-cover-placeholder">🗺</div>`}
+        ${s.mood?`<span class="card-mood">${s.mood}</span>`:''}
+      </div>
+      <div class="card-body">
+        ${s.location?`<div class="card-location">${s.location}</div>`:''}
+        <div class="card-title">${s.title||'Untitled'}</div>
+        <div class="card-excerpt">${excerpt(s.body)}</div>
+        <div class="card-footer">
+          <span class="card-date">${formatDate(s.date)}</span>
+          <span class="read-more">Read →</span>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+renderGrid();
+</script>
+</body>
+</html>

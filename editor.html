@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Editor — Wandering Pages</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sand:#f5f0e8;--paper:#faf7f2;--ink:#1e1a14;--rust:#b85c2a;
+  --rust-light:#f0ddd2;--mist:#e0d9ce;--caption:#7a6e62;--deep:#2e2620;
+  --green:#2a7a4a;
+}
+body{background:var(--sand);color:var(--ink);font-family:'Lato',sans-serif;font-weight:300;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--deep);color:#f5f0e8;padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.topbar-left{display:flex;align-items:center;gap:1rem}
+.topbar a{color:#c0a888;font-size:12px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;font-family:'Lato',sans-serif}
+.topbar a:hover{color:#f5f0e8}
+.topbar h1{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:#f5f0e8}
+.topbar-actions{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.tbtn{padding:.45rem 1rem;border-radius:7px;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-family:'Lato',sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,.2);background:transparent;color:#f5f0e8;transition:background .15s}
+.tbtn:hover{background:rgba(255,255,255,.12)}
+.tbtn.primary{background:var(--rust);border-color:var(--rust)}
+.tbtn.primary:hover{background:#a04e22}
+.save-status{font-size:11px;color:#c0a888;font-style:italic;font-family:'Playfair Display',serif;white-space:nowrap}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 50px)}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+
+/* SIDEBAR */
+.sidebar{background:var(--paper);border-right:1px solid var(--mist);padding:1.25rem;overflow-y:auto;max-height:calc(100vh - 50px);position:sticky;top:50px}
+.sidebar h2{font-family:'Playfair Display',serif;font-size:14px;font-weight:400;color:var(--caption);letter-spacing:.5px;margin-bottom:.75rem;text-transform:uppercase;font-size:11px;letter-spacing:2px}
+.story-list{list-style:none;display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem}
+.story-item{padding:.55rem .75rem;border-radius:8px;cursor:pointer;font-size:13px;line-height:1.4;border:1px solid transparent;transition:background .15s,border-color .15s}
+.story-item:hover{background:var(--sand)}
+.story-item.active{background:var(--rust-light);border-color:var(--mist);color:var(--rust)}
+.story-item .si-title{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.story-item .si-date{font-size:10px;color:var(--caption);margin-top:1px}
+.new-btn{width:100%;padding:.55rem;border-radius:8px;font-size:12px;letter-spacing:1px;text-transform:uppercase;font-family:'Lato',sans-serif;cursor:pointer;border:1px dashed var(--mist);background:transparent;color:var(--caption);transition:background .15s,color .15s}
+.new-btn:hover{background:var(--rust-light);color:var(--rust);border-color:var(--rust)}
+
+/* EDITOR AREA */
+.editor-area{padding:2rem 2.5rem;max-width:820px}
+@media(max-width:900px){.editor-area{padding:1.5rem 1rem}}
+
+/* META FIELDS */
+.meta-row{display:grid;grid-template-columns:1fr auto auto;gap:.75rem;align-items:end;margin-bottom:1.25rem}
+@media(max-width:600px){.meta-row{grid-template-columns:1fr 1fr}}
+.field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--caption);margin-bottom:.35rem}
+.field input,.field select{background:var(--paper);border:1px solid var(--mist);border-radius:8px;padding:.5rem .8rem;font-size:14px;font-family:'Lato',sans-serif;font-weight:300;color:var(--ink);outline:none;width:100%;transition:border-color .15s}
+.field input:focus{border-color:#c0a888}
+.field.title-field input{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;border:none;border-bottom:1px solid var(--mist);border-radius:0;background:transparent;padding:.25rem 0}
+.field.title-field input:focus{border-bottom-color:#c0a888}
+.field.title-field input::placeholder{color:#c0b8a8}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:3px;flex-wrap:wrap;align-items:center;background:var(--paper);border:1px solid var(--mist);border-radius:10px;padding:.4rem .6rem;margin-bottom:.75rem;position:sticky;top:50px;z-index:10}
+.ttip{position:relative;display:inline-flex}
+.tool{width:30px;height:28px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:14px;color:var(--ink);display:flex;align-items:center;justify-content:center;transition:background .1s;font-weight:400;font-family:'Lato',sans-serif}
+.tool:hover{background:var(--mist)}
+.tool.active-format{background:var(--rust-light);color:var(--rust)}
+.tool-sep{width:1px;height:20px;background:var(--mist);margin:0 3px;align-self:center}
+.tool-wide{width:auto;padding:0 8px;font-size:11px;letter-spacing:.5px}
+
+/* CONTENT EDITABLE */
+.doc-title{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,36px);font-weight:400;color:var(--deep);margin-bottom:.3rem;outline:none;min-height:1.2em;border-bottom:1px solid var(--mist);padding-bottom:.5rem;margin-bottom:1rem}
+.doc-title:empty::before{content:attr(data-placeholder);color:#c0b8a8;pointer-events:none}
+.editor{outline:none;font-size:15px;line-height:1.9;color:#3a342c;min-height:400px}
+.editor:focus{outline:none}
+.editor [contenteditable]{outline:none}
+.editor h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--deep);margin:1.5rem 0 .5rem}
+.editor h3{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;color:var(--deep);margin:1.25rem 0 .4rem}
+.editor p{margin-bottom:.85rem}
+.editor blockquote{border-left:3px solid var(--rust);padding:.5rem 1rem;margin:1rem 0;color:var(--caption);font-style:italic;font-family:'Playfair Display',serif;font-size:16px}
+.editor ul,.editor ol{padding-left:1.5rem;margin-bottom:.85rem}
+.editor li{margin-bottom:.25rem}
+.editor a{color:var(--rust);text-decoration:underline}
+.editor hr{border:none;border-top:1px solid var(--mist);margin:1.5rem 0}
+
+/* PHOTO BLOCK */
+.photo-block{margin:1.5rem 0;border:1px solid var(--mist);border-radius:12px;overflow:hidden;background:var(--paper)}
+.photo-block img{width:100%;display:block;max-height:520px;object-fit:cover}
+.photo-caption-input{width:100%;padding:.55rem .85rem;font-size:13px;font-family:'Playfair Display',serif;font-style:italic;color:var(--caption);border:none;border-top:1px solid var(--mist);background:transparent;outline:none}
+.photo-caption-input::placeholder{color:#c0b8a8}
+.photo-block-actions{display:flex;gap:.35rem;padding:.4rem .6rem;background:var(--sand);border-top:1px solid var(--mist)}
+.pb-btn{padding:.25rem .65rem;border-radius:5px;font-size:11px;font-family:'Lato',sans-serif;cursor:pointer;border:1px solid var(--mist);background:transparent;color:var(--caption)}
+.pb-btn:hover{background:var(--mist)}
+.pb-btn.danger{border-color:#e2a0a0;color:#a03030}
+
+/* STORY META PANEL */
+.story-meta-panel{background:var(--paper);border:1px solid var(--mist);border-radius:12px;padding:1.25rem;margin-top:1.5rem}
+.story-meta-panel h3{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--caption);margin-bottom:.85rem}
+.smrow{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+@media(max-width:500px){.smrow{grid-template-columns:1fr}}
+.export-area{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--mist)}
+.export-area p{font-size:12px;color:var(--caption);line-height:1.6;margin-bottom:.5rem}
+.slug-preview{font-size:12px;color:var(--caption);margin-top:.35rem;font-family:monospace}
+
+/* SHARE MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--paper);border-radius:16px;padding:1.75rem;max-width:480px;width:92%;position:relative;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;margin-bottom:1rem}
+.modal-close{position:absolute;top:.9rem;right:1.1rem;background:none;border:none;font-size:20px;cursor:pointer;color:var(--caption)}
+.caption-preview{background:var(--sand);border:1px solid var(--mist);border-radius:8px;padding:1rem;font-size:13px;line-height:1.75;white-space:pre-wrap;color:var(--ink);margin-bottom:.75rem;max-height:180px;overflow-y:auto}
+.hint{font-size:12px;color:var(--caption);line-height:1.6;margin-bottom:.75rem}
+.copied-hint{font-size:11px;color:var(--green);font-style:italic;display:none;margin-right:auto}
+
+/* DELETE CONFIRM */
+.del-confirm{display:none;background:var(--paper);border:1px solid #e2a0a0;border-radius:10px;padding:1rem;margin-top:.75rem;font-size:13px;color:#4a1a1a}
+.del-confirm.open{display:block}
+
+.empty-editor{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--caption);font-family:'Playfair Display',serif;font-style:italic;font-size:16px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html">← Blog</a>
+    <h1>Editor</h1>
+  </div>
+  <div class="topbar-actions">
+    <span class="save-status" id="save-status"></span>
+    <button class="tbtn" onclick="shareStory()">Share ↗</button>
+    <button class="tbtn primary" onclick="saveStory()">Save story</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2>My stories</h2>
+    <ul class="story-list" id="story-list"></ul>
+    <button class="new-btn" onclick="newStory()">+ New story</button>
+    <div class="del-confirm" id="del-confirm">
+      Delete "<span id="del-title"></span>"?<br>This cannot be undone.
+      <div style="display:flex;gap:.5rem;margin-top:.75rem">
+        <button class="tbtn" style="color:var(--ink);border-color:var(--mist)" onclick="cancelDelete()">Cancel</button>
+        <button class="tbtn" style="background:#c03030;border-color:#c03030;color:#fff" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- EDITOR -->
+  <main class="editor-area" id="editor-area">
+    <div class="empty-editor" id="empty-msg">
+      Select a story or create a new one →
+    </div>
+
+    <div id="editor-wrapper" style="display:none">
+      <!-- Title -->
+      <div class="field title-field" style="margin-bottom:1rem">
+        <input id="story-title" placeholder="Story title…" oninput="markDirty()" />
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar" id="toolbar">
+        <button class="tool" title="Bold" onmousedown="fmt('bold',event)"><b>B</b></button>
+        <button class="tool" title="Italic" onmousedown="fmt('italic',event)"><i>I</i></button>
+        <button class="tool" title="Underline" onmousedown="fmt('underline',event)"><u>U</u></button>
+        <div class="tool-sep"></div>
+        <button class="tool tool-wide" onmousedown="fmt('heading2',event)">H2</button>
+        <button class="tool tool-wide" onmousedown="fmt('heading3',event)">H3</button>
+        <div class="tool-sep"></div>
+        <button class="tool" title="Quote" onmousedown="fmt('blockquote',event)">"</button>
+        <button class="tool" title="Bullet list" onmousedown="fmt('ul',event)">☰</button>
+        <button class="tool" title="Numbered list" onmousedown="fmt('ol',event)">①</button>
+        <button class="tool" title="Divider" onmousedown="fmt('hr',event)">—</button>
+        <div class="tool-sep"></div>
+        <button class="tool tool-wide" title="Insert photo" onmousedown="triggerPhoto(event)">🖼 Photo</button>
+        <input type="file" id="photo-input" accept="image/*" style="display:none" multiple onchange="insertPhotos(event)" />
+      </div>
+
+      <!-- Content editable body -->
+      <div class="editor" id="editor" contenteditable="true" oninput="markDirty()" onkeydown="editorKeydown(event)"></div>
+
+      <!-- Story settings -->
+      <div class="story-meta-panel">
+        <h3>Story settings</h3>
+        <div class="smrow">
+          <div class="field">
+            <label>Location</label>
+            <input id="s-location" placeholder="e.g. Jaisalmer, Rajasthan" oninput="markDirty()" />
+          </div>
+          <div class="field">
+            <label>Date of visit</label>
+            <input id="s-date" type="date" oninput="markDirty()" />
+          </div>
+        </div>
+        <div class="smrow">
+          <div class="field">
+            <label>Mood / vibe</label>
+            <select id="s-mood" oninput="markDirty()">
+              <option>🌅 Wanderstruck</option>
+              <option>😌 Peaceful</option>
+              <option>🔥 Adventurous</option>
+              <option>🥲 Bittersweet</option>
+              <option>🤩 Overwhelmed (good)</option>
+              <option>😤 Honest struggle</option>
+              <option>🌧 Reflective</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Hashtag theme</label>
+            <input id="s-hashtag" placeholder="e.g. rajasthandiaries" oninput="markDirty()" />
+          </div>
+        </div>
+        <div class="smrow">
+          <div class="field">
+            <label>Visibility</label>
+            <select id="s-visibility" oninput="markDirty()">
+              <option value="public">Public — show on homepage</option>
+              <option value="draft">Draft — hidden from homepage</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Story slug (URL)</label>
+            <input id="s-slug" placeholder="auto-generated" oninput="markDirty()" />
+            <div class="slug-preview" id="slug-preview"></div>
+          </div>
+        </div>
+        <div class="export-area">
+          <p>To publish: save this story, then run the export below to update your <code>stories/</code> folder on GitHub.</p>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="tbtn" style="color:var(--ink);border-color:var(--mist)" onclick="exportJSON()">Download story JSON</button>
+            <button class="tbtn danger" style="border-color:#e2a0a0;color:#a03030" onclick="promptDelete()">Delete story</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-bg" id="share-modal-bg">
+  <div class="modal">
+    <button class="modal-close" onclick="closeShareModal()">✕</button>
+    <h3>Share this story</h3>
+    <div class="hint">Copy one of the captions below, paste it with your photos on Instagram or WhatsApp.</div>
+    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--caption);margin-bottom:.4rem">Instagram caption</p>
+    <div class="caption-preview" id="ig-caption"></div>
+    <div class="btn-row" style="display:flex;gap:.5rem;margin-bottom:1rem">
+      <span class="copied-hint" id="ig-copied">Copied!</span>
+      <button class="tbtn" style="color:var(--ink);border-color:var(--mist)" onclick="copyCaption('ig')">Copy</button>
+    </div>
+    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--caption);margin-bottom:.4rem">WhatsApp message</p>
+    <div class="caption-preview" id="wa-caption"></div>
+    <div class="btn-row" style="display:flex;gap:.5rem">
+      <span class="copied-hint" id="wa-copied">Copied!</span>
+      <button class="tbtn" style="color:var(--ink);border-color:var(--mist)" onclick="copyCaption('wa')">Copy</button>
+      <button class="tbtn primary" onclick="openWA()">Open WhatsApp ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Storage helpers
+const STORE_KEY = 'wj_stories';
+function loadStories(){ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); }
+function saveStories(arr){ localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }
+
+// ── State
+let stories = loadStories();
+let currentId = null;
+let dirty = false;
+
+// ── Init
+renderSidebar();
+if(stories.length) openStory(stories[0].id);
+
+function renderSidebar(){
+  const ul = document.getElementById('story-list');
+  ul.innerHTML = stories.map(s => `
+    <li class="story-item${s.id===currentId?' active':''}" onclick="openStory('${s.id}')">
+      <div class="si-title">${s.title||'Untitled'}</div>
+      <div class="si-date">${s.location?s.location+' · ':''}${s.date||'no date'}</div>
+    </li>`).join('');
+}
+
+function openStory(id){
+  if(dirty && !confirm('You have unsaved changes. Discard and switch?')) return;
+  currentId = id;
+  dirty = false;
+  const s = stories.find(x=>x.id===id);
+  if(!s) return;
+  document.getElementById('empty-msg').style.display='none';
+  document.getElementById('editor-wrapper').style.display='block';
+  document.getElementById('story-title').value = s.title||'';
+  document.getElementById('editor').innerHTML = s.body||'';
+  document.getElementById('s-location').value = s.location||'';
+  document.getElementById('s-date').value = s.date||'';
+  document.getElementById('s-mood').value = s.mood||'🌅 Wanderstruck';
+  document.getElementById('s-hashtag').value = s.hashtag||'';
+  document.getElementById('s-visibility').value = s.visibility||'public';
+  document.getElementById('s-slug').value = s.slug||'';
+  updateSlugPreview();
+  renderSidebar();
+  setStatus('');
+}
+
+function newStory(){
+  if(dirty && !confirm('Unsaved changes. Discard?')) return;
+  const id = 'story_'+Date.now();
+  const s = {id, title:'', body:'', location:'', date:new Date().toISOString().slice(0,10), mood:'🌅 Wanderstruck', hashtag:'', visibility:'public', slug:'', created: Date.now()};
+  stories.unshift(s);
+  saveStories(stories);
+  currentId = id;
+  dirty = false;
+  document.getElementById('empty-msg').style.display='none';
+  document.getElementById('editor-wrapper').style.display='block';
+  document.getElementById('story-title').value='';
+  document.getElementById('editor').innerHTML='';
+  document.getElementById('s-location').value='';
+  document.getElementById('s-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('s-mood').value='🌅 Wanderstruck';
+  document.getElementById('s-hashtag').value='';
+  document.getElementById('s-visibility').value='public';
+  document.getElementById('s-slug').value='';
+  updateSlugPreview();
+  renderSidebar();
+  document.getElementById('story-title').focus();
+}
+
+function saveStory(){
+  if(!currentId) return;
+  const idx = stories.findIndex(x=>x.id===currentId);
+  if(idx<0) return;
+  const title = document.getElementById('story-title').value.trim();
+  let slug = document.getElementById('s-slug').value.trim();
+  if(!slug) slug = slugify(title||'untitled');
+  stories[idx] = {
+    ...stories[idx],
+    title,
+    body: document.getElementById('editor').innerHTML,
+    location: document.getElementById('s-location').value,
+    date: document.getElementById('s-date').value,
+    mood: document.getElementById('s-mood').value,
+    hashtag: document.getElementById('s-hashtag').value.trim(),
+    visibility: document.getElementById('s-visibility').value,
+    slug,
+    updated: Date.now()
+  };
+  saveStories(stories);
+  dirty = false;
+  document.getElementById('s-slug').value = slug;
+  updateSlugPreview();
+  renderSidebar();
+  setStatus('Saved ✓');
+}
+
+function markDirty(){
+  dirty = true;
+  setStatus('Unsaved changes');
+  updateSlugPreview();
+}
+
+function setStatus(msg){ document.getElementById('save-status').textContent = msg; }
+
+function slugify(t){ return t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)||'story'; }
+
+function updateSlugPreview(){
+  const title = document.getElementById('story-title').value.trim();
+  const slug = document.getElementById('s-slug').value.trim() || slugify(title||'untitled');
+  document.getElementById('slug-preview').textContent = 'stories/'+slug+'.json';
+}
+
+// ── Formatting
+function fmt(type, e){
+  e.preventDefault();
+  const ed = document.getElementById('editor');
+  ed.focus();
+  if(type==='bold') document.execCommand('bold',false,null);
+  else if(type==='italic') document.execCommand('italic',false,null);
+  else if(type==='underline') document.execCommand('underline',false,null);
+  else if(type==='heading2') wrapBlock('h2');
+  else if(type==='heading3') wrapBlock('h3');
+  else if(type==='blockquote') wrapBlock('blockquote');
+  else if(type==='ul') document.execCommand('insertUnorderedList',false,null);
+  else if(type==='ol') document.execCommand('insertOrderedList',false,null);
+  else if(type==='hr'){
+    document.execCommand('insertHTML',false,'<hr/>');
+  }
+  markDirty();
+}
+
+function wrapBlock(tag){
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const el = document.createElement(tag);
+  try{
+    range.surroundContents(el);
+    sel.removeAllRanges();
+    const r2 = document.createRange();
+    r2.setStartAfter(el);
+    r2.collapse(true);
+    sel.addRange(r2);
+  } catch(err){
+    document.execCommand('formatBlock',false,tag);
+  }
+}
+
+function editorKeydown(e){
+  if(e.key==='Tab'){e.preventDefault();document.execCommand('insertHTML',false,'&nbsp;&nbsp;&nbsp;&nbsp;');}
+}
+
+// ── Photo insert
+function triggerPhoto(e){ e.preventDefault(); document.getElementById('photo-input').click(); }
+
+function insertPhotos(e){
+  const files = Array.from(e.target.files);
+  const ed = document.getElementById('editor');
+  ed.focus();
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const blockId = 'pb_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+      const html = `
+<div class="photo-block" id="${blockId}" contenteditable="false">
+  <img src="${ev.target.result}" alt="Travel photo" />
+  <input class="photo-caption-input" placeholder="Add a caption for this photo…" oninput="markDirty()" />
+  <div class="photo-block-actions">
+    <button class="pb-btn" onmousedown="moveBlock('${blockId}',-1,event)">▲ Move up</button>
+    <button class="pb-btn" onmousedown="moveBlock('${blockId}',1,event)">▼ Move down</button>
+    <button class="pb-btn danger" onmousedown="removeBlock('${blockId}',event)">✕ Remove</button>
+  </div>
+</div>
+<p><br></p>`;
+      document.execCommand('insertHTML',false,html);
+      markDirty();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+
+function moveBlock(id, dir, e){
+  e.preventDefault();
+  const block = document.getElementById(id);
+  if(!block) return;
+  if(dir===-1 && block.previousElementSibling){
+    block.parentNode.insertBefore(block, block.previousElementSibling);
+  } else if(dir===1 && block.nextElementSibling){
+    block.parentNode.insertBefore(block.nextElementSibling, block);
+  }
+  markDirty();
+}
+function removeBlock(id, e){
+  e.preventDefault();
+  const block = document.getElementById(id);
+  if(block && confirm('Remove this photo?')) { block.remove(); markDirty(); }
+}
+
+// ── Export JSON
+function exportJSON(){
+  if(!currentId){alert('Save story first.');return;}
+  const s = stories.find(x=>x.id===currentId);
+  if(!s){alert('Story not found.');return;}
+  const slug = s.slug||slugify(s.title||'untitled');
+  const blob = new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=slug+'.json';
+  a.click();
+}
+
+// ── Delete
+let pendingDeleteId = null;
+function promptDelete(){
+  if(!currentId) return;
+  const s = stories.find(x=>x.id===currentId);
+  document.getElementById('del-title').textContent = s.title||'Untitled';
+  document.getElementById('del-confirm').classList.add('open');
+  pendingDeleteId = currentId;
+}
+function cancelDelete(){ document.getElementById('del-confirm').classList.remove('open'); pendingDeleteId=null; }
+function confirmDelete(){
+  stories = stories.filter(x=>x.id!==pendingDeleteId);
+  saveStories(stories);
+  currentId=null; dirty=false;
+  document.getElementById('del-confirm').classList.remove('open');
+  document.getElementById('editor-wrapper').style.display='none';
+  document.getElementById('empty-msg').style.display='flex';
+  renderSidebar();
+}
+
+// ── Share modal
+function shareStory(){
+  if(!currentId){alert('Open a story first.');return;}
+  const s = stories.find(x=>x.id===currentId)||{};
+  const slug = s.slug||slugify(s.title||'story');
+  const url = `https://preksha-opml.github.io/travel-journal/story.html?s=${slug}`;
+  const tags = s.hashtag ? `#${s.hashtag} #traveldiaries #wanderlust` : '#traveldiaries #wanderlust';
+  document.getElementById('ig-caption').textContent =
+    `📍 ${s.location||s.title||'My travels'}\n${s.mood||''}\n\n${stripHTML(s.body||'').slice(0,300)}${(s.body||'').length>300?'…':''}\n\n${tags}`;
+  document.getElementById('wa-caption').textContent =
+    `*${s.title||'My travel story'}*\n\n${stripHTML(s.body||'').slice(0,280)}${(s.body||'').length>280?'…':''}\n\n📖 Read the full story: ${url}`;
+  document.getElementById('share-modal-bg').classList.add('open');
+}
+function closeShareModal(){ document.getElementById('share-modal-bg').classList.remove('open'); }
+function stripHTML(h){ const d=document.createElement('div');d.innerHTML=h;return d.textContent||''; }
+function copyCaption(which){
+  const txt = document.getElementById(which+'-caption').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const el=document.getElementById(which+'-copied');
+    el.style.display='inline';
+    setTimeout(()=>el.style.display='none',2000);
+  });
+}
+function openWA(){
+  const txt = document.getElementById('wa-caption').textContent;
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+document.getElementById('share-modal-bg').addEventListener('click',function(e){if(e.target===this)closeShareModal();});
+
+// ── Autosave every 60s
+setInterval(()=>{ if(dirty) saveStory(); },60000);
+</script>
+</body>
+</html>

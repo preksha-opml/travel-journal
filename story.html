@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Story — Wandering Pages</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sand:#f5f0e8;--paper:#faf7f2;--ink:#1e1a14;--rust:#b85c2a;
+  --rust-light:#f0ddd2;--mist:#e0d9ce;--caption:#7a6e62;--deep:#2e2620;
+}
+body{background:var(--sand);color:var(--ink);font-family:'Lato',sans-serif;font-weight:300;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--deep);color:#f5f0e8;padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.topbar a{color:#c0a888;font-size:12px;letter-spacing:1px;text-transform:uppercase;text-decoration:none}
+.topbar a:hover{color:#f5f0e8}
+.tb-right{display:flex;gap:.75rem}
+.tbtn{padding:.4rem .9rem;border-radius:7px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-family:'Lato',sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,.2);background:transparent;color:#f5f0e8;transition:background .15s;text-decoration:none;display:inline-flex;align-items:center}
+.tbtn:hover{background:rgba(255,255,255,.1)}
+
+/* HERO */
+.hero{background:var(--deep);color:#f5f0e8;padding:3rem 1.5rem 2.5rem;text-align:center;position:relative}
+.hero-eyebrow{display:flex;align-items:center;justify-content:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap}
+.hero-location{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--rust);font-family:'Lato',sans-serif}
+.hero-mood{font-size:12px;color:#c0a888;font-family:'Playfair Display',serif;font-style:italic}
+.hero-sep{color:#c0a888;font-size:10px}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,5vw,3rem);font-weight:400;line-height:1.2;max-width:700px;margin:0 auto .75rem}
+.hero-date{font-size:13px;color:#b0a898;font-style:italic;font-family:'Playfair Display',serif}
+
+/* COVER IMAGE */
+.cover-wrap{max-height:480px;overflow:hidden;position:relative}
+.cover-wrap img{width:100%;object-fit:cover;max-height:480px;display:block}
+
+/* ARTICLE */
+article{max-width:720px;margin:0 auto;padding:3rem 1.5rem 4rem}
+
+/* BODY TYPOGRAPHY */
+article p{font-size:16px;line-height:1.9;color:#3a342c;margin-bottom:1.1rem}
+article h2{font-family:'Playfair Display',serif;font-size:24px;font-weight:400;color:var(--deep);margin:2rem 0 .75rem}
+article h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:var(--deep);margin:1.5rem 0 .5rem}
+article blockquote{border-left:3px solid var(--rust);padding:.75rem 1.25rem;margin:1.5rem 0;color:var(--caption);font-style:italic;font-family:'Playfair Display',serif;font-size:17px;line-height:1.7}
+article ul,article ol{padding-left:1.6rem;margin-bottom:1.1rem}
+article li{font-size:16px;line-height:1.9;color:#3a342c;margin-bottom:.25rem}
+article hr{border:none;border-top:1px solid var(--mist);margin:2rem 0}
+article a{color:var(--rust);text-decoration:underline}
+article b,article strong{font-weight:700}
+article i,article em{font-style:italic}
+article u{text-decoration:underline}
+
+/* PHOTO BLOCKS in reader */
+.photo-block{margin:2rem 0;border-radius:12px;overflow:hidden;border:1px solid var(--mist);background:var(--paper)}
+.photo-block img{width:100%;display:block;max-height:560px;object-fit:cover}
+.photo-block .photo-caption-input{display:block;width:100%;padding:.6rem .9rem;font-size:13px;font-family:'Playfair Display',serif;font-style:italic;color:var(--caption);background:var(--paper);border:none;border-top:1px solid var(--mist);pointer-events:none}
+.photo-block .photo-block-actions{display:none}
+
+/* SHARE FOOTER */
+.share-footer{border-top:1px solid var(--mist);padding-top:1.5rem;margin-top:1.5rem}
+.share-footer h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:400;color:var(--caption);margin-bottom:.75rem}
+.share-row{display:flex;gap:.5rem;flex-wrap:wrap}
+.share-btn{padding:.45rem 1rem;border-radius:7px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-family:'Lato',sans-serif;cursor:pointer;border:1px solid var(--mist);background:transparent;color:var(--caption);transition:background .15s}
+.share-btn:hover{background:var(--mist)}
+.share-btn.wa{border-color:#25d366;color:#1a7a3e}
+.share-btn.ig{border-color:var(--rust);color:var(--rust)}
+
+/* SHARE MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--paper);border-radius:16px;padding:1.75rem;max-width:440px;width:92%;position:relative;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;margin-bottom:1rem}
+.modal-close{position:absolute;top:.9rem;right:1.1rem;background:none;border:none;font-size:20px;cursor:pointer;color:var(--caption)}
+.caption-preview{background:var(--sand);border:1px solid var(--mist);border-radius:8px;padding:1rem;font-size:13px;line-height:1.75;white-space:pre-wrap;color:var(--ink);margin-bottom:.75rem;max-height:170px;overflow-y:auto}
+.copied-hint{font-size:11px;color:#2a7a4a;font-style:italic;display:none;margin-right:auto}
+.not-found{text-align:center;padding:5rem 1.5rem;font-family:'Playfair Display',serif;font-style:italic;color:var(--caption);font-size:18px}
+.not-found a{color:var(--rust);text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html">← All stories</a>
+  <div class="tb-right">
+    <a class="tbtn" href="editor.html">✏ Edit</a>
+    <button class="tbtn" onclick="openShareModal()">Share ↗</button>
+  </div>
+</div>
+
+<div id="story-root"></div>
+
+<!-- SHARE MODAL -->
+<div class="modal-bg" id="share-modal-bg">
+  <div class="modal">
+    <button class="modal-close" onclick="closeShareModal()">✕</button>
+    <h3>Share this story</h3>
+    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--caption);margin-bottom:.4rem">Instagram caption</p>
+    <div class="caption-preview" id="ig-caption"></div>
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;align-items:center">
+      <span class="copied-hint" id="ig-copied">Copied!</span>
+      <button class="share-btn ig" onclick="copyCaption('ig')">Copy</button>
+    </div>
+    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--caption);margin-bottom:.4rem">WhatsApp message</p>
+    <div class="caption-preview" id="wa-caption"></div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span class="copied-hint" id="wa-copied">Copied!</span>
+      <button class="share-btn" onclick="copyCaption('wa')">Copy</button>
+      <button class="share-btn wa" onclick="openWA()">Open WhatsApp ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_KEY = 'wj_stories';
+function loadStories(){ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); }
+
+const params = new URLSearchParams(location.search);
+const slug = params.get('s');
+const stories = loadStories();
+const story = stories.find(s=>s.slug===slug||s.id===slug);
+
+const root = document.getElementById('story-root');
+
+if(!story){
+  root.innerHTML = `<div class="not-found">Story not found. <a href="index.html">← Back to all stories</a></div>`;
+} else {
+  document.title = (story.title||'Story') + ' — Wandering Pages';
+
+  // Extract first image for cover
+  const m = (story.body||'').match(/<img[^>]+src="([^"]+)"/);
+  const coverImg = m ? m[1] : null;
+
+  // Build hero
+  const heroEyebrow = [
+    story.location ? `<span class="hero-location">${story.location}</span>` : '',
+    (story.location && story.mood) ? `<span class="hero-sep">·</span>` : '',
+    story.mood ? `<span class="hero-mood">${story.mood}</span>` : ''
+  ].join('');
+
+  root.innerHTML = `
+    ${coverImg ? `<div class="cover-wrap"><img src="${coverImg}" alt="${story.title||'Cover'}" /></div>` : ''}
+    <div class="hero">
+      ${heroEyebrow ? `<div class="hero-eyebrow">${heroEyebrow}</div>` : ''}
+      <h1>${story.title||'Untitled'}</h1>
+      ${story.date ? `<div class="hero-date">${formatDate(story.date)}</div>` : ''}
+    </div>
+    <article>
+      <div id="story-body">${story.body||''}</div>
+      <div class="share-footer">
+        <h3>Enjoyed this story?</h3>
+        <div class="share-row">
+          <button class="share-btn wa" onclick="openShareModal()">📱 Share on WhatsApp</button>
+          <button class="share-btn ig" onclick="openShareModal()">📸 Instagram caption</button>
+          <a class="share-btn" href="index.html">← All stories</a>
+        </div>
+      </div>
+    </article>`;
+
+  // Make photo blocks read-only (hide edit controls)
+  document.querySelectorAll('.photo-block-actions').forEach(el=>el.style.display='none');
+  document.querySelectorAll('.photo-caption-input').forEach(el=>{ el.readOnly=true; });
+}
+
+function formatDate(d){
+  if(!d) return '';
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+}
+
+function stripHTML(h){ const d=document.createElement('div');d.innerHTML=h;return d.textContent||''; }
+
+function openShareModal(){
+  if(!story) return;
+  const pageUrl = location.href;
+  const tags = story.hashtag ? `#${story.hashtag} #traveldiaries #wanderlust` : '#traveldiaries #wanderlust';
+  const body = stripHTML(story.body||'');
+  document.getElementById('ig-caption').textContent =
+    `📍 ${story.location||story.title||'My travels'}\n${story.mood||''}\n\n${body.slice(0,300)}${body.length>300?'…':''}\n\n${tags}`;
+  document.getElementById('wa-caption').textContent =
+    `*${story.title||'My travel story'}*\n\n${body.slice(0,280)}${body.length>280?'…':''}\n\n📖 Full story: ${pageUrl}`;
+  document.getElementById('share-modal-bg').classList.add('open');
+}
+function closeShareModal(){ document.getElementById('share-modal-bg').classList.remove('open'); }
+function copyCaption(which){
+  const txt = document.getElementById(which+'-caption').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const el=document.getElementById(which+'-copied');
+    el.style.display='inline';
+    setTimeout(()=>el.style.display='none',2200);
+  });
+}
+function openWA(){
+  window.open('https://wa.me/?text='+encodeURIComponent(document.getElementById('wa-caption').textContent),'_blank');
+}
+document.getElementById('share-modal-bg').addEventListener('click',function(e){if(e.target===this)closeShareModal();});
+</script>
+</body>
+</html>
